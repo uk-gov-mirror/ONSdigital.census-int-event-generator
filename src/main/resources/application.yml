@@ -1,0 +1,31 @@
+info:
+  name: ${project.artifactId}
+  version: ${project.version}
+  origin: ${scm.url}
+  commit: ${buildNumber}
+  branch: ${scmBranch}
+  built: ${timestamp}
+
+# logging config here as a reminder as to how to override logback from cmd line
+# ie -Dlogging.level.org.springframework=DEBUG
+logging:
+  level:
+    uk.gov.ons.ctp: DEBUG
+    org.springframework: ERROR
+  profile: DEV
+  useJson: false
+
+spring:
+  main:
+    web-application-type: NONE
+
+rabbitmq:
+  username: guest
+  password: guest
+  host: localhost
+  port: 35672
+  virtual-host: /
+  
+queueconfig:
+  event-exchange: events
+  

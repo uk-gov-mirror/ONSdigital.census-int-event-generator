@@ -1,0 +1,29 @@
+{
+	"id": "1234-4567-789",
+	"caseRef": "123456",
+	"survey": "census",
+	"collectionExerciseId": "A1",
+	"address": {
+		"addressLine1": "2A Priors Way",
+		"addressLine2": null,
+		"addressLine3": null,
+		"townName": null,
+		"postcode": null,
+		"region": null,
+		"latitude": null,
+		"longitude": null,
+		"uprn": null,
+		"arid": null,
+		"addressType": null,
+		"estabType": null
+	},
+	"contact": {
+		"title": "Sir",
+		"forename": "Phil",
+		"surname": "Whiles",
+		"email": "phil.whiles@gmail.com",
+		"telNo": "07968583119"
+	},
+	"state": "ACTIVE",
+	"actionableFrom": null
+}
