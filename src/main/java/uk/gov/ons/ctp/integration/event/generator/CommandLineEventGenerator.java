@@ -1,5 +1,10 @@
 package uk.gov.ons.ctp.integration.event.generator;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,15 +24,12 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.integration.annotation.IntegrationComponentScan;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import uk.gov.ons.ctp.common.event.EventPublisher;
+import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
+import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
+import uk.gov.ons.ctp.common.event.EventPublisher.Source;
 import uk.gov.ons.ctp.common.event.EventSender;
 import uk.gov.ons.ctp.common.event.SpringRabbitEventSender;
-import uk.gov.ons.ctp.common.event.model.CollectionCase;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
 
 @SpringBootApplication
@@ -35,6 +37,11 @@ import uk.gov.ons.ctp.common.event.model.EventPayload;
 @ComponentScan(basePackages = {"uk.gov.ons.ctp.integration"})
 @ImportResource("springintegration/main.xml")
 public class CommandLineEventGenerator implements ApplicationRunner {
+
+  public static final String ARG_FILE = "file";
+  public static final String ARG_EVENT_TYPE = "eventType";
+  public static final String ARG_SOURCE = "source";
+  public static final String ARG_CHANNEL = "channel";
 
   private EventPublisher eventPublisher;
   private EventGenerator eventGenerator;
@@ -51,45 +58,62 @@ public class CommandLineEventGenerator implements ApplicationRunner {
   public void run(ApplicationArguments args) throws Exception {
     ObjectMapper om = new ObjectMapper();
     String fileName = null;
-    String payloadType = null;
+    EventType eventType = null;
+    Source source = null;
+    Channel channel = null;
 
     List<String> nonOptArgs = args.getNonOptionArgs();
     for (String arg : nonOptArgs) {
-      if (arg.startsWith("file=")) {
-        fileName = arg.substring(5);
-      } else if (arg.startsWith("type=")) {
-        payloadType = arg.substring(5);
+      if (arg.startsWith(ARG_FILE)) {
+        fileName = arg.substring(ARG_FILE.length() + 1);
+      } else if (arg.startsWith(ARG_EVENT_TYPE)) {
+        eventType = EventType.valueOf(arg.substring(ARG_EVENT_TYPE.length() + 1));
+      } else if (arg.startsWith(ARG_SOURCE)) {
+        source = Source.valueOf(arg.substring(ARG_SOURCE.length() + 1));
+      } else if (arg.startsWith(ARG_CHANNEL)) {
+        channel = Channel.valueOf(arg.substring(ARG_CHANNEL.length() + 1));
       }
     }
 
-    if (fileName == null || payloadType == null) {
-      System.out.println("Usage : file=overrides.csv type=[CollectionCase]");
+    if (fileName == null || eventType == null || source == null || channel == null) {
+      System.out.println(
+          "Args example: file=overrides.csv eventType=CASE_CREATED source=CASE_SERVICE channel=RM");
       return;
     }
 
-    Class<? extends EventPayload> payloadClass = null;
-    switch (payloadType.toUpperCase()) {
-      case "COLLECTIONCASE":
-        payloadClass = CollectionCase.class;
-        break;
-      default:
-        throw new Exception("Unhandled type");
+    Class<? extends EventPayload> payloadClass = eventType.getPayloadType();
+    if (payloadClass == null) {
+      System.err.println("eventType not yet supported");
+      System.exit(1);
     }
 
-    List<EventPayload> payloads = eventGenerator.process(fileName, payloadClass);
+    List<EventPayload> payloads =
+        eventGenerator.process(eventType, source, channel, fileName, payloadClass);
 
     List<Map<String, String>> results = new ArrayList<>();
     for (EventPayload payload : payloads) {
       Map<String, String> result = new HashMap<>();
-      om.valueToTree(payload).fields()
-        .forEachRemaining(node -> mapAppender(result, node, new ArrayList<String>()));
+      om.valueToTree(payload)
+          .fields()
+          .forEachRemaining(node -> mapAppender(result, node, new ArrayList<String>()));
       results.add(result);
     }
-    
-    results.get(0).forEach((k,v) -> {System.out.print(k + ",");}); 
+
+    results
+        .get(0)
+        .forEach(
+            (k, v) -> {
+              System.out.print(k + ",");
+            });
     System.out.println();
-    results.forEach(m->{m.forEach((k,v) -> {System.out.print(v + ",");}); System.out.println();}); 
-    
+    results.forEach(
+        m -> {
+          m.forEach(
+              (k, v) -> {
+                System.out.print(v + ",");
+              });
+          System.out.println();
+        });
   }
 
   @PostConstruct
@@ -101,7 +125,6 @@ public class CommandLineEventGenerator implements ApplicationRunner {
    * Bean used to publish asynchronous event messages
    *
    * @param connectionFactory RabbitMQ connection settings and strategies
-   * @return the event publisher
    */
   @Autowired
   public void createEventPublisher(final ConnectionFactory connectionFactory) {
@@ -126,9 +149,8 @@ public class CommandLineEventGenerator implements ApplicationRunner {
     iterator.forEachRemaining(node -> mapAppender(result, node, new ArrayList<String>()));
   }
 
-
-  private void mapAppender(Map<String, String> result, Map.Entry<String, JsonNode> node,
-      List<String> names) {
+  private void mapAppender(
+      Map<String, String> result, Map.Entry<String, JsonNode> node, List<String> names) {
     names.add(node.getKey());
     if (node.getValue().isTextual()) {
       String name = names.stream().collect(Collectors.joining("."));
@@ -139,7 +161,8 @@ public class CommandLineEventGenerator implements ApplicationRunner {
       String name = names.stream().collect(Collectors.joining("."));
       result.put(name, null);
     } else {
-      node.getValue().fields()
+      node.getValue()
+          .fields()
           .forEachRemaining(nested -> mapAppender(result, nested, new ArrayList<>(names)));
     }
   }

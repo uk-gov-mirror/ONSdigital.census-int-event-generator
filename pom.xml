@@ -96,18 +96,12 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-csv</artifactId>
-    </dependency>
-    <!-- SPRING END -->
-
     <!-- ONS libraries -->
 
     <dependency>
       <groupId>uk.gov.ons.ctp.integration.common</groupId>
-      <artifactId>framework</artifactId>
-      <version>0.0.32-SNAPSHOT</version>
+      <artifactId>event-publisher</artifactId>
+      <version>0.0.1</version>
     </dependency>
 
     <dependency>

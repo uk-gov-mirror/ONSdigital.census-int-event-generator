@@ -1,5 +1,8 @@
 package uk.gov.ons.ctp.integration.event.generator;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -9,60 +12,63 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 import org.springframework.core.io.ClassPathResource;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import uk.gov.ons.ctp.common.event.EventPublisher;
-import uk.gov.ons.ctp.common.event.model.CollectionCase;
+import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
+import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
+import uk.gov.ons.ctp.common.event.EventPublisher.Source;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
 
 public class EventGenerator {
 
   private EventPublisher publisher;
-  
+
   public EventGenerator(EventPublisher publisher) {
     this.publisher = publisher;
   }
 
-  private static Map<Class<? extends EventPayload>, String> routingMap = new HashMap<>();
-  static {
-    routingMap.put(CollectionCase.class, "event.case.update");
-  }
-
-  public List<EventPayload> process(String fileName, Class<? extends EventPayload> payloadClass)
+  public List<EventPayload> process(
+      EventType eventType,
+      Source source,
+      Channel channel,
+      String fileName,
+      Class<? extends EventPayload> payloadClass)
       throws Exception {
     List<Map<String, String>> contexts = readFromCsv(fileName);
-    return process(contexts, payloadClass);
+    return process(eventType, source, channel, contexts, payloadClass);
   }
-  
-  public List<EventPayload> process(List<Map<String, String>> contexts, Class<? extends EventPayload> payloadClass) throws Exception {
+
+  public List<EventPayload> process(
+      EventType eventType,
+      Source source,
+      Channel channel,
+      List<Map<String, String>> contexts,
+      Class<? extends EventPayload> payloadClass)
+      throws Exception {
     List<EventPayload> payloads = new ArrayList<>();
     for (Map<String, String> context : contexts) {
-      payloads.add(publish(context, payloadClass));
+      payloads.add(publish(eventType, source, channel, context, payloadClass));
     }
     return payloads;
   }
-  
 
-  private EventPayload publish(Map<String, String> context,
-      Class<? extends EventPayload> payloadClass) throws Exception {
-    String routingKey = routingMap.get(payloadClass);
-    if (routingKey == null) {
-      throw new Exception("Unhandled payload");
-    }
-
+  private EventPayload publish(
+      EventType eventType,
+      Source source,
+      Channel channel,
+      Map<String, String> context,
+      Class<? extends EventPayload> payloadClass)
+      throws Exception {
     EventPayload payload = generatePayload(context, payloadClass);
-    publisher.sendEvent(routingKey, payload);
+    publisher.sendEvent(eventType, source, channel, payload);
     return payload;
   }
-
 
   private List<Map<String, String>> readFromCsv(String filename) throws Exception {
     List<Map<String, String>> contexts = new ArrayList<>();
 
     List<String> header = new ArrayList<>();
     List<String> record = new ArrayList<>();
-    try (Scanner scanner = new Scanner(new File(filename));) {
+    try (Scanner scanner = new Scanner(new File(filename)); ) {
       var line = 0;
       while (scanner.hasNextLine()) {
         record = getRecordFromLine(scanner.nextLine());
@@ -94,8 +100,7 @@ public class EventGenerator {
     }
     return values;
   }
-  
-  
+
   private EventPayload generatePayload(
       Map<String, String> context, Class<? extends EventPayload> payloadClass) throws Exception {
 
@@ -111,7 +116,7 @@ public class EventGenerator {
             value = UUID.randomUUID().toString();
             break;
           default:
-            throw new Exception ("Unknown value token : " + entry.getValue());
+            throw new Exception("Unknown value token : " + entry.getValue());
         }
       } else {
         value = entry.getValue();

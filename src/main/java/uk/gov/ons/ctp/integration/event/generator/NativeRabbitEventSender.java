@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+import uk.gov.ons.ctp.common.event.EventPublisher.RoutingKey;
 import uk.gov.ons.ctp.common.event.EventSender;
-import uk.gov.ons.ctp.common.event.RabbitConnectionDetails;
 import uk.gov.ons.ctp.common.event.model.GenericEvent;
 
 public class NativeRabbitEventSender implements EventSender {
@@ -15,7 +17,8 @@ public class NativeRabbitEventSender implements EventSender {
 
   ObjectMapper objectMapper;
 
-  public NativeRabbitEventSender(RabbitConnectionDetails connectionDetails) throws Exception {
+  public NativeRabbitEventSender(RabbitConnectionDetails connectionDetails)
+      throws TimeoutException, IOException {
     objectMapper = new ObjectMapper();
 
     ConnectionFactory factory = new ConnectionFactory();
@@ -24,23 +27,22 @@ public class NativeRabbitEventSender implements EventSender {
     factory.setUsername(connectionDetails.getUser());
     factory.setPassword(connectionDetails.getPassword());
     connection = null;
-    try {
-      connection = factory.newConnection();
-      channel = connection.createChannel();
-      channel.exchangeDeclare("events", "topic", true);
-    } catch (Exception e) {
-      throw e;
-    }
+    connection = factory.newConnection();
+    channel = connection.createChannel();
+    channel.exchangeDeclare("events", "topic", true);
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
     connection.close();
   }
 
   @Override
-  public void sendEvent(String routingKey, GenericEvent genericEvent) throws Exception {
-    channel.basicPublish("events", routingKey, null, objectMapper.writeValueAsString(genericEvent).getBytes("UTF-8"));
+  public void sendEvent(RoutingKey routingKey, GenericEvent genericEvent) throws Exception {
+    channel.basicPublish(
+        "events",
+        routingKey.getKey(),
+        null,
+        objectMapper.writeValueAsString(genericEvent).getBytes("UTF-8"));
   }
-
 }
