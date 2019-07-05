@@ -3,7 +3,8 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>eventgenerator</artifactId>
+  <groupId>uk.gov.ons.ctp.integration.common</groupId>
+  <artifactId>event-generator</artifactId>
   <version>0.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
@@ -29,31 +30,6 @@
     <url>https://github.com/ONSdigital/census-int-event-generator</url>
     <tag>HEAD</tag>
   </scm>
-
-  <profiles>
-    <profile>
-      <id>artifactory</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-
-      <repositories>
-        <repository>
-          <id>jcenter-repo</id>
-          <url>http://artifactory-sdc.onsdigital.uk/artifactory/jcenter-cache/</url>
-        </repository>
-        <repository>
-          <id>release-repo</id>
-          <name>libs-release</name>
-          <url>http://artifactory-sdc.onsdigital.uk/artifactory/libs-release-local</url>
-        </repository>
-        <repository>
-          <id>snapshot-repo</id>
-          <url>http://artifactory-sdc.onsdigital.uk/artifactory/libs-snapshot-local/</url>
-        </repository>
-      </repositories>
-    </profile>
-  </profiles>
 
   <dependencies>
     <!-- Spring dependencies -->
@@ -208,101 +184,20 @@
         <artifactId>maven-checkstyle-plugin</artifactId>
       </plugin>
 
-      <plugin>
-        <groupId>com.coveo</groupId>
-        <artifactId>fmt-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>buildnumber-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <configuration>
-          <executable>true</executable>
-          <mainClass>uk.gov.ons.ctp.integration.event.generator.EventGenerator</mainClass>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.2</version>
-        <executions>
-          <execution>
-            <id>default-prepare-agent</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-          </execution>
-          <execution>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-            <configuration>
-            </configuration>
-          </execution>
-
-          <execution>
-            <id>pre-unit-test</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-            <configuration>
-              <destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
-              <propertyName>surefireArgLine</propertyName>
-            </configuration>
-          </execution>
-          <execution>
-            <id>post-unit-test</id>
-            <phase>test</phase>
-            <goals>
-              <goal>report</goal>
-            </goals>
-            <configuration>
-              <dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
-              <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
-            </configuration>
-          </execution>
-
-          <execution>
-            <id>pre-integration-test</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-            <configuration>
-              <destFile>${project.build.directory}/coverage-reports/jacoco-it.exec</destFile>
-              <propertyName>failsafeArgLine</propertyName>
-            </configuration>
-          </execution>
-
-          <execution>
-            <id>post-integration-test</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>report</goal>
-            </goals>
-            <configuration>
-              <dataFile>${project.build.directory}/coverage-reports/jacoco-it.exec</dataFile>
-              <outputDirectory>${project.reporting.outputDirectory}/jacoco-it</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
 
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkCount>1</forkCount>
+          <reuseForks>true</reuseForks>
+        </configuration>
       </plugin>
 
       <plugin>
@@ -330,24 +225,6 @@
       </plugin>
 
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.0.0-M3</version>
-        <configuration>
-          <argLine>${failsafeArgLine}</argLine>
-          <skip>${skip.integration.tests}</skip>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
-            </goals>
-            <phase>integration-test</phase>
-          </execution>
-        </executions>
-      </plugin>
 
     </plugins>
     <resources>
