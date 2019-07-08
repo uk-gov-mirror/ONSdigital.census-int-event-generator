@@ -67,11 +67,11 @@ public class CommandLineEventGenerator implements ApplicationRunner {
       if (arg.startsWith(ARG_FILE)) {
         fileName = arg.substring(ARG_FILE.length() + 1);
       } else if (arg.startsWith(ARG_EVENT_TYPE)) {
-        eventType = EventType.valueOf(arg.substring(ARG_EVENT_TYPE.length() + 1));
+        eventType = EventType.valueOf(arg.substring(ARG_EVENT_TYPE.length() + 1).toUpperCase());
       } else if (arg.startsWith(ARG_SOURCE)) {
-        source = Source.valueOf(arg.substring(ARG_SOURCE.length() + 1));
+        source = Source.valueOf(arg.substring(ARG_SOURCE.length() + 1).toUpperCase());
       } else if (arg.startsWith(ARG_CHANNEL)) {
-        channel = Channel.valueOf(arg.substring(ARG_CHANNEL.length() + 1));
+        channel = Channel.valueOf(arg.substring(ARG_CHANNEL.length() + 1).toUpperCase());
       }
     }
 
