@@ -11,13 +11,19 @@ info:
 logging:
   level:
     uk.gov.ons.ctp: DEBUG
-    org.springframework: ERROR
-  profile: DEV
-  useJson: false
+    org.springframework: WARN
+
+server:
+  port: 8171
 
 spring:
-  main:
-    web-application-type: NONE
+  mvc:
+    servlet:
+      path: /
+  security:
+    user:
+      name: generator
+      password: hitmeup
 
 rabbitmq:
   username: guest
@@ -25,7 +31,3 @@ rabbitmq:
   host: localhost
   port: 35672
   virtual-host: /
-  
-queueconfig:
-  event-exchange: events
-  
