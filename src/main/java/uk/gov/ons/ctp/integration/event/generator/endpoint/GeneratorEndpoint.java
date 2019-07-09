@@ -32,7 +32,8 @@ public class GeneratorEndpoint implements CTPEndpoint {
   @ResponseStatus(value = HttpStatus.OK)
   public ResponseEntity<GeneratorResponse> generate(@Valid @RequestBody GeneratorRequest request)
       throws CTPException {
-    log.with(request.getEventType()).with(request.getSource()).with(request.getChannel()).info("create events");
+    log.with(request.getEventType()).with(request.getSource()).with(request.getChannel())
+        .info("create events");
     Class<? extends EventPayload> payloadClass = request.getEventType().getPayloadType();
     if (payloadClass == null) {
       throw new CTPException(Fault.BAD_REQUEST, "eventType not yet supported");
