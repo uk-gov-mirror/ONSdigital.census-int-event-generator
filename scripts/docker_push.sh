@@ -10,10 +10,10 @@ export RELEASETAG=`if [ "$TRAVIS_PULL_REQUEST_BRANCH" == "" ]; then echo "latest
 
 echo "Building with tags [$VERSIONTAG $RELEASETAG]"
 
-docker build -t eu.gcr.io/census-int-ci/census-contact-centre-service:$VERSIONTAG .
-docker push eu.gcr.io/census-int-ci/census-contact-centre-service:$VERSIONTAG
+docker build -t eu.gcr.io/census-int-ci/census-int-event-generator:$VERSIONTAG .
+docker push eu.gcr.io/census-int-ci/census-int-event-generator:$VERSIONTAG
 if [ ! -z "$RELEASETAG" ]; then
-  docker tag eu.gcr.io/census-int-ci/census-contact-centre-service:$VERSIONTAG eu.gcr.io/census-int-ci/census-contact-centre-service:$RELEASETAG
-  docker push eu.gcr.io/census-int-ci/census-contact-centre-service:$RELEASETAG
+  docker tag eu.gcr.io/census-int-ci/census-int-event-generator:$VERSIONTAG eu.gcr.io/census-int-ci/census-int-event-generator:$RELEASETAG
+  docker push eu.gcr.io/census-int-ci/census-int-event-generator:$RELEASETAG
 fi
 
