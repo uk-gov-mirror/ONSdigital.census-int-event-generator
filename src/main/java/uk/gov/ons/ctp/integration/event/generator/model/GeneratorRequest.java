@@ -12,7 +12,6 @@ public class GeneratorRequest {
   private EventType eventType;
   private Source source;
   private Channel channel;
-  
+
   private List<Map<String, String>> contexts;
-  
 }

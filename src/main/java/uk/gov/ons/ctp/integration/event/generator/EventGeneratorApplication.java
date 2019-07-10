@@ -19,7 +19,6 @@ import uk.gov.ons.ctp.common.event.SpringRabbitEventSender;
 @ImportResource("springintegration/main.xml")
 public class EventGeneratorApplication {
 
-
   public static void main(final String[] args) {
     SpringApplication.run(EventGeneratorApplication.class, args);
   }
@@ -44,6 +43,4 @@ public class EventGeneratorApplication {
     EventSender sender = new SpringRabbitEventSender(template);
     return new EventPublisher(sender);
   }
-
-
 }
