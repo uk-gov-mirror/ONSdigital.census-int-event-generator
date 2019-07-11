@@ -1,17 +1,19 @@
 package uk.gov.ons.ctp.integration.event.generator;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 import org.springframework.core.io.ClassPathResource;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import uk.gov.ons.ctp.common.event.EventPublisher;
 import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
@@ -107,7 +109,7 @@ public class EventGenerator {
     ObjectMapper mapper = new ObjectMapper();
     String payloadType = null;
     payloadType = payloadClass.getSimpleName();
-    ObjectNode json = loadObjectNode(payloadType);
+    JsonNode node = loadObjectNode(payloadType);
     for (Map.Entry<String, String> entry : context.entrySet()) {
       String value = null;
       if (entry.getValue().startsWith("#")) {
@@ -121,21 +123,33 @@ public class EventGenerator {
       } else {
         value = entry.getValue();
       }
-      json.put(entry.getKey(), value);
+      setJsonNodeValue(node, entry.getKey(), value);
     }
 
-    EventPayload payload = mapper.treeToValue(json, payloadClass);
+    EventPayload payload = mapper.treeToValue(node, payloadClass);
     return payload;
   }
 
-  private ObjectNode loadObjectNode(final String qualifier) throws Exception {
+  private void setJsonNodeValue(JsonNode node, String key, String value) {
+    String[] parts = key.split("\\.");
+    if (parts.length > 1) {
+      String remainder = String.join(".", Arrays.copyOfRange(parts, 1, parts.length));
+      JsonNode targetNode = node.get(parts[0]);
+      setJsonNodeValue(targetNode, remainder, value);
+    } else {
+      ObjectNode objectNode = (ObjectNode) node;
+      objectNode.put(key, value);
+    }
+  }
+  
+  private JsonNode loadObjectNode(final String qualifier) throws Exception {
     ObjectMapper mapper = new ObjectMapper();
     mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-    ObjectNode jsonNode = null;
+    JsonNode jsonNode = null;
     String path = generatePath(qualifier);
     try {
       InputStream inStream = new ClassPathResource(generatePath(qualifier)).getInputStream();
-      jsonNode = (ObjectNode) mapper.readTree(inStream);
+      jsonNode = (JsonNode) mapper.readTree(inStream);
     } catch (Throwable t) {
       //      log.debug("Problem loading fixture {} reason {}", path, t.getMessage());
       throw t;
