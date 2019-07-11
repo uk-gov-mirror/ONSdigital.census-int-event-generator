@@ -1,5 +1,9 @@
 package uk.gov.ons.ctp.integration.event.generator;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -10,10 +14,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 import org.springframework.core.io.ClassPathResource;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import uk.gov.ons.ctp.common.event.EventPublisher;
 import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
@@ -141,7 +141,7 @@ public class EventGenerator {
       objectNode.put(key, value);
     }
   }
-  
+
   private JsonNode loadObjectNode(final String qualifier) throws Exception {
     ObjectMapper mapper = new ObjectMapper();
     mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
