@@ -12,7 +12,28 @@ logging:
   level:
     uk.gov.ons.ctp: DEBUG
     org.springframework: WARN
-
+  profile: DEV
+  useJson: false
+  
+management:
+  health:
+    rabbit:
+      enabled: false
+  endpoints:
+    enabled-by-default: true
+    web:
+      base-path: /
+  info:
+    env:
+      enabled: true 
+    build:
+      enabled: true 
+    git:
+      mode: SIMPLE 
+      enabled: true 
+    defaults:
+      enabled: true 
+      
 server:
   port: 8171
 
