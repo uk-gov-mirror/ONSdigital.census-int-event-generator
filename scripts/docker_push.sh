@@ -1,6 +1,5 @@
 #!/bin/bash -eu
 
-echo "Hello"
 echo $GCLOUD_SERVICE_KEY | base64 -d | docker login -u _json_key --password-stdin https://eu.gcr.io
 
 export VERSION=`mvn help:evaluate -Dexpression=project.version -q -DforceStdout`
