@@ -1,9 +1,5 @@
 package uk.gov.ons.ctp.integration.event.generator;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -14,6 +10,12 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 import org.springframework.core.io.ClassPathResource;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import uk.gov.ons.ctp.common.event.EventPublisher;
 import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
@@ -21,6 +23,7 @@ import uk.gov.ons.ctp.common.event.EventPublisher.Source;
 import uk.gov.ons.ctp.common.event.model.EventPayload;
 
 public class EventGenerator {
+  private static final Logger log = LoggerFactory.getLogger(EventGenerator.class);
 
   private EventPublisher publisher;
 
@@ -48,7 +51,8 @@ public class EventGenerator {
       throws Exception {
     List<EventPayload> payloads = new ArrayList<>();
     for (Map<String, String> context : contexts) {
-      payloads.add(publish(eventType, source, channel, context, payloadClass));
+      EventPayload payload = publish(eventType, source, channel, context, payloadClass);
+      payloads.add(payload);
     }
     return payloads;
   }
@@ -130,14 +134,20 @@ public class EventGenerator {
     return payload;
   }
 
-  private void setJsonNodeValue(JsonNode node, String key, String value) {
+  private void setJsonNodeValue(JsonNode node, String key, String value) throws Exception {
     String[] parts = key.split("\\.");
     if (parts.length > 1) {
       String remainder = String.join(".", Arrays.copyOfRange(parts, 1, parts.length));
       JsonNode targetNode = node.get(parts[0]);
+      if (targetNode == null) {
+        throw new Exception("Error: Child node '" + parts[0] + "' does not exist for key '" + key + "'");
+      }
       setJsonNodeValue(targetNode, remainder, value);
     } else {
       ObjectNode objectNode = (ObjectNode) node;
+      if (!objectNode.has(key)) {
+        throw new Exception("Error: Attempting to set value for unknown node: " + key);
+      }
       objectNode.put(key, value);
     }
   }
@@ -148,10 +158,10 @@ public class EventGenerator {
     JsonNode jsonNode = null;
     String path = generatePath(qualifier);
     try {
-      InputStream inStream = new ClassPathResource(generatePath(qualifier)).getInputStream();
+      InputStream inStream = new ClassPathResource(path).getInputStream();
       jsonNode = (JsonNode) mapper.readTree(inStream);
     } catch (Throwable t) {
-      //      log.debug("Problem loading fixture {} reason {}", path, t.getMessage());
+      log.debug("Problem loading fixture {} reason {}", path, t.getMessage());
       throw t;
     }
     return jsonNode;
