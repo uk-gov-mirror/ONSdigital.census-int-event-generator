@@ -29,7 +29,8 @@ public class FirestoreEndpoint implements CTPEndpoint {
     long startTime = System.currentTimeMillis();
     long timeoutMillis = parseTimeoutString(timeout);
     
-    log.info("Firestore wait for collection '" + collection + "' to contain '" + key + "' for up to '" + timeout + "'");
+    log.info("Firestore wait for collection '" + collection + "' to contain '" + key + "' "
+        + "for up to '" + timeout + "'");
     
     // Wait until the object appears in Firestore, or we timeout waiting
     boolean found = false;

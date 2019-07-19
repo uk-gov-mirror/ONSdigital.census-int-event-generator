@@ -51,7 +51,8 @@ public class GeneratorEndpoint implements CTPEndpoint {
               payloadClass);
     } catch (Exception e) {
       log.error("Event generation failed", e);
-      throw new CTPException(Fault.SYSTEM_ERROR, "Failed to generate events. Cause: " + e.getMessage());
+      throw new CTPException(Fault.SYSTEM_ERROR, "Failed to generate events. "
+          + "Cause: " + e.getMessage());
     }
 
     GeneratorResponse response = new GeneratorResponse();

@@ -140,7 +140,8 @@ public class EventGenerator {
       String remainder = String.join(".", Arrays.copyOfRange(parts, 1, parts.length));
       JsonNode targetNode = node.get(parts[0]);
       if (targetNode == null) {
-        throw new Exception("Error: Child node '" + parts[0] + "' does not exist for key '" + key + "'");
+        throw new Exception("Error: Child node '" + parts[0] + "' does not exist for "
+            + "key '" + key + "'");
       }
       setJsonNodeValue(targetNode, remainder, value);
     } else {
