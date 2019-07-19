@@ -14,6 +14,29 @@ to the contextual data sent to the endpoint.
 ## Endpoint
 ### POST /generate
 
+This endpoint publishes events of the specified type.
+
+Example command line usage:
+
+```
+    cat > /tmp/uac_updated.json <<EOF
+    {
+        "eventType": "UAC_UPDATED",
+        "source": "SAMPLE_LOADER",
+        "channel": "RM",
+        "contexts": [
+            {
+                "uacHash": "147eb9dcde0e090429c01dbf634fd9b69a7f141f005c387a9c00498908499dde",
+                "caseId": "f868fcfc-7280-40ea-ab01-b173ac245da3"
+            }
+        ]
+    }
+    EOF
+
+    http --auth generator:hitmeup POST "http://localhost:8171/generate" @/tmp/uac_updated.json
+```
+
+
 Out of the box, basic auth :
 user: generator, password: hitmeup
 (Auth settings can be environment specific)
@@ -102,6 +125,22 @@ user: generator, password: hitmeup
     ]
 }
 ```
+
+### GET /firestore/wait
+
+This endpoint waits for an object to be created in Firestore. If the object is found before the timeout expires then it returns with a 200 status. If the object is not found in time then it returns a 404 (not found) status. 
+
+The endpoint has 3 mandatory arguments:
+  - **collection**, this holds the name of the collection that we expect the object to be created in.
+  - **key**, is the primary key for the object that are waiting for.
+  - **timeout**, is the maximum time that we are prepared to wait for the object to appear. This supports units of milliseconds(ms) or seconds(s), eg 'timeout=250ms', 'timeout=2s' or 'timeout=2.5s'
+
+Example command line invocation using Httpie:
+
+```
+http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collection=case&key=f868fcfc-7280-40ea-ab01-b173ac245da3&timeout=500ms"
+```
+
 
 ## Programmatic use
 
