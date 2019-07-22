@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: event-generator-config
+data:
+  rabbitmq-host: "10.160.0.9"
+  rabbitmq-port: "5672"
