@@ -135,6 +135,20 @@ The endpoint has 3 mandatory query parameters:
   - **key**, is the primary key for the object that are waiting for.
   - **timeout**, is the maximum time that we are prepared to wait for the object to appear. This supports units of milliseconds(ms) or seconds(s), eg 'timeout=250ms', 'timeout=2s' or 'timeout=2.5s'
 
+The caller can also specify the update timestamp of an object:
+  - **minObjectTimestamp**, this is an optional argument for the minimum allowed update timestamp 
+    of the target object. Waiting will continue until the until the timestamp of the target
+    object is greater than this value, or the timeout period is reached. This should be specified
+    as the number of milliseconds since the epoch.
+Note that Firestore does not set the upadate timestamp of an object if it's contents have not changed.    
+    
+The caller can also wait for an object to contain the expected content:
+  - **contentCheckPath**, is an optional path to a field whose content we check to decide if 
+    an object has been updated, eg 'contact.forename' or 'state'. If the target object does not
+    contain the field with the expected value then waiting will continue until it does, or the
+    timeout is reached.
+  - **expectedValue**, is the value than a field must contain if 'contentCheckPath' has been set.
+
 Example command line invocation using Httpie:
 
 ```
