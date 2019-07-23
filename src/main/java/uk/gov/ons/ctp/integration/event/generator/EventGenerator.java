@@ -162,7 +162,7 @@ public class EventGenerator {
       InputStream inStream = new ClassPathResource(path).getInputStream();
       jsonNode = (JsonNode) mapper.readTree(inStream);
     } catch (Throwable t) {
-      log.debug("Problem loading fixture {} reason {}", path, t.getMessage());
+      log.info("Problem loading fixture {} reason {}", path, t.getMessage());
       throw t;
     }
     return jsonNode;

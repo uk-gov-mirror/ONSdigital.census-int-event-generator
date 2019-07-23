@@ -49,19 +49,19 @@ public class FirestoreService {
     }
 
     // Optionally, only regard the object as existing if it is newer than the specified time
-    QueryDocumentSnapshot targetDocuments = querySnapshot.getDocuments().get(0);
+    QueryDocumentSnapshot targetDocument = querySnapshot.getDocuments().get(0);
     if (minObjectTimestamp != null) {
-      long objectUpdateMillis = targetDocuments.getUpdateTime().getSeconds() * 1000;
+      long objectUpdateMillis = targetDocument.getUpdateTime().getSeconds() * 1000;
       if (objectUpdateMillis < minObjectTimestamp) {
         return false;
       }
     }
 
-    // Optionally, determine if target field is in the expected state
+    // Optionally, determine if named field is in the expected state
     if (contentCheckPath != null) {
       String[] parts = contentCheckPath.split("\\.");
       FieldPath fieldPath = FieldPath.of(parts);
-      Object actualValue = targetDocuments.get(fieldPath);
+      Object actualValue = targetDocument.get(fieldPath);
 
       if (!expectedValue.equals(actualValue)) {
         return false;

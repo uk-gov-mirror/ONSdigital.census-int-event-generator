@@ -128,34 +128,39 @@ user: generator, password: hitmeup
 
 ### GET /firestore/wait
 
-This endpoint waits for an object to be created in Firestore. If the object is found before the timeout expires then it returns with a 200 status. If the object is not found in time then it returns a 404 (not found) status. 
+This endpoint waits for an object to be created in Firestore. If the object is found before the timeout expires then it returns with a 200 status. If the object is not found before a timeout period is reached then it returns a 404 (not found) status. 
 
 The endpoint has 3 mandatory query parameters:
   - **collection**, this holds the name of the collection that we expect the object to be created in.
   - **key**, is the primary key for the object that are waiting for.
   - **timeout**, is the maximum time that we are prepared to wait for the object to appear. This supports units of milliseconds(ms) or seconds(s), eg 'timeout=250ms', 'timeout=2s' or 'timeout=2.5s'
 
-The caller can also specify the update timestamp of an object:
-  - **minObjectTimestamp**, this is an optional argument for the minimum allowed update timestamp 
-    of the target object. Waiting will continue until the until the timestamp of the target
-    object is greater than this value, or the timeout period is reached. This should be specified
-    as the number of milliseconds since the epoch.
-Note that Firestore does not set the upadate timestamp of an object if it's contents have not changed.    
+To support waiting on objects whose content we expect to be updated the caller can optionally wait based on the candidate objects timestamp or object content. If candidate objects are to be checked by both timestamp and content then both checks must pass for it to be declared as found.
+
+The caller can optionally specify the minimum update timestamp of the object:
+  - **minObjectTimestamp**, this is the minimum allowed update timestamp 
+    of the target object. Waiting will continue until a candidate object has an update time greater than the this
+    value, or the timeout period is reached. This value is a long containing the number of milliseconds since the epoch.
+Note that when Firestore updates an object it does not set the update timestamp of an object if it's contents have not changed.   
     
-The caller can also wait for an object to contain the expected content:
+The caller can optionally wait for the object to contain some expected content:
   - **contentCheckPath**, is an optional path to a field whose content we check to decide if 
     an object has been updated, eg 'contact.forename' or 'state'. If the target object does not
     contain the field with the expected value then waiting will continue until it does, or the
     timeout is reached.
   - **expectedValue**, is the value than a field must contain if 'contentCheckPath' has been set.
 
-Example command line invocation using Httpie:
+Example command line invocation using Httpie (which actually runs as 'http'):
 
 ```
+# Wait using HTTPie command:
 http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collection=case&key=f868fcfc-7280-40ea-ab01-b173ac245da3&timeout=500ms"
 
-# Alternative
+# Equivalent command using HTTPie query parameters '==' syntax: 
 http --auth generator:hitmeup get http://localhost:8171/firestore/wait collection==case key==f868fcfc-7280-40ea-ab01-b173ac245da3 timeout==500ms
+
+# And to wait for an object to be updated:
+http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collection=case&key=f868fcfc-7280-40ea-ab01-173ac245da3&minObjectTimestamp=1563801758184&path=contact.forename&value=Phil&timeout=500s"
 ```
 
 
