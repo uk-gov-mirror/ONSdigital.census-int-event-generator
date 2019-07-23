@@ -14,6 +14,29 @@ to the contextual data sent to the endpoint.
 ## Endpoint
 ### POST /generate
 
+This endpoint publishes events of the specified type.
+
+Example command line usage:
+
+```
+    cat > /tmp/uac_updated.json <<EOF
+    {
+        "eventType": "UAC_UPDATED",
+        "source": "SAMPLE_LOADER",
+        "channel": "RM",
+        "contexts": [
+            {
+                "uacHash": "147eb9dcde0e090429c01dbf634fd9b69a7f141f005c387a9c00498908499dde",
+                "caseId": "f868fcfc-7280-40ea-ab01-b173ac245da3"
+            }
+        ]
+    }
+    EOF
+
+    http --auth generator:hitmeup POST "http://localhost:8171/generate" @/tmp/uac_updated.json
+```
+
+
 Out of the box, basic auth :
 user: generator, password: hitmeup
 (Auth settings can be environment specific)
@@ -102,6 +125,85 @@ user: generator, password: hitmeup
     ]
 }
 ```
+
+### GET /firestore/wait
+
+This endpoint waits for an object to be created in Firestore. If the object is found before the timeout expires then it returns with a 200 status. If the object is not found before a timeout period is reached then it returns a 404 (not found) status. 
+
+The endpoint has 3 mandatory query parameters:
+  - **collection**, this holds the name of the collection that we expect the object to be created in.
+  - **key**, is the primary key for the object that are waiting for.
+  - **timeout**, is the maximum time that we are prepared to wait for the object to appear. This supports units of milliseconds(ms) or seconds(s), eg 'timeout=250ms', 'timeout=2s' or 'timeout=2.5s'
+
+To support waiting on objects whose content we expect to be updated the caller can optionally wait based on the candidate objects timestamp or object content. If candidate objects are to be checked by both timestamp and content then both checks must pass for it to be declared as found.
+
+The caller can optionally specify that age of the object:
+  - **newerThan**, is a timestamp that the object must have been updated since. Waiting will continue until a candidate object has an update time greater than the this value, or the timeout period is reached. This value is a long containing the number of milliseconds since the epoch.
+Note that when Firestore updates an object it does not set the update timestamp of an object if it's contents have not changed.   
+    
+The caller can optionally wait for the object to contain some expected content:
+  - **contentCheckPath**, is an optional path to a field whose content we check to decide if 
+    an object has been updated, eg 'contact.forename' or 'state'. If the target object does not
+    contain the field with the expected value then waiting will continue until it does, or the
+    timeout is reached.
+  - **expectedValue**, is the value than a field must contain if 'contentCheckPath' has been set.
+
+On success, this endpoint returns the Firestore update timestamp for the found object.
+
+Psuedo code for this endpoint is:
+
+```
+do {
+  Read object from firestore based on 'collection.key'
+  if (object not found) continue;
+  
+  if (newerThan set  &&  candidate object timestamp < newerThan) {
+      # Object exists, but it is not the updated object
+      continue
+  }
+  
+  if (contentCheckPath set  &&  !expectedValue equals actualFieldContent) {
+      # Object exists, but target field doesn't contain expected value
+      continue
+    }
+  }
+  
+  return 200 status, with objects update time
+} while (timeout not reached)
+
+return 404 status 
+  
+```
+
+
+Example command line invocation using Httpie (which actually runs as 'http'):
+
+```
+# Wait using HTTPie command:
+http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collection=case&key=f868fcfc-7280-40ea-ab01-b173ac245da3&timeout=500ms"
+
+# Equivalent command using HTTPie query parameters '==' syntax: 
+http --auth generator:hitmeup get http://localhost:8171/firestore/wait collection==case key==f868fcfc-7280-40ea-ab01-b173ac245da3 timeout==500ms
+
+# And to wait for an object to be updated:
+http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collection=case&key=f868fcfc-7280-40ea-ab01-173ac245da3&newerThan=1563801758184&path=contact.forename&value=Phil&timeout=500s"
+```
+
+#### Object updates and timestamps
+
+The updating of objects can make it tricky for tests to wait for the updating of an object in Firestore. Tests have the option of waiting for the object update based on:
+  - the update time. 
+  - updated object state. Where possible this is potentially more readable and pretty foolproof.
+
+Waiting based on the objects update timestamp can introduce problems based on differences between the timestamp on the Google server and the machine running the test.
+It's for this reason that the endpoint returns an objects update time, as it allows this value to be fed back in to spot subsequent updates.
+
+The typical sequence would be:
+
+  - Invoke event generator to feed in event.
+  - Wait for object to appear in Firestore. Store it's update timestamp.
+  - Use event generator to send in updated object.
+  - Wait for update to appear in Firestore. The 'newerThan' timestamp value is specified as the captured timestamp of the initial create. 
 
 ## Programmatic use
 
