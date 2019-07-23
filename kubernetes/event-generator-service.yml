@@ -1,18 +1,41 @@
+---
+apiVersion: cloud.google.com/v1beta1
+kind: BackendConfig
+metadata:
+  name: eventgeneratoringress
+spec:
+  securityPolicy:
+    name: "eventgenerator-ingress"
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: eventgenerator
+  annotations:
+    beta.cloud.google.com/backend-config: '{"ports": {"http":"eventgeneratoringress"}}'
   labels:
     app: eventgenerator
-  annotations:
-    cloud.google.com/load-balancer-type: "Internal"
 spec:
-  type: LoadBalancer
-  loadBalancerSourceRanges:
-  - 10.170.0.0/16
+  type: NodePort
+  externalTrafficPolicy: Cluster
   ports:
-  - name: http-server
+  - name: http
     port: 80
     targetPort: http-server
   selector:
     app: eventgenerator
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: eventgeneratoringress
+  labels:
+    app: eventgenerator
+  annotations:
+    kubernetes.io/ingress.allow-http: "false"
+    kubernetes.io/ingress.global-static-ip-name: eventgenerator
+    ingress.gcp.kubernetes.io/pre-shared-cert: eventgenerator
+spec:
+  backend:
+    serviceName: eventgenerator
+    servicePort: 80
