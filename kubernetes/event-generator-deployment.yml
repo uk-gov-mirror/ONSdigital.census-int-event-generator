@@ -81,3 +81,13 @@ spec:
             configMapKeyRef:
               name: event-generator-config
               key: rabbitmq-port
+        - name: SPRING_SECURITY_USER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: event-generator-identity
+              key: username
+        - name: SPRING_SECURITY_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: event-generator-identity
+              key: password
