@@ -33,10 +33,10 @@ public class FirestoreEndpoint implements CTPEndpoint {
    * @param collection is the name of the collection to search, eg, 'case'
    * @param key is the key of the target object in the collection. 
    * eg, 'f868fcfc-7280-40ea-ab01-b173ac245da3'
-   * @param minObjectTimestamp, is an optional argument for the minimum allowed update timestamp 
-   * of the target object. Waiting will continue until the until the timestamp of the target
-   * object is greater than this value, or the timeout period is reached. This should be specified
-   * as the number of milliseconds since the epoch.
+   * @param newerThan, is an optional argument to specify the timestamp that the an object must
+   * have been updated after. Waiting will continue until the until the update timestamp of the
+   * object is greater than this value, or the timeout period is reached. This value is the
+   * number of milliseconds since the epoch.
    * @param contentCheckPath, is an optional path to a field whose content we check to decide if 
    * an object has been updated, eg 'contact.forename' or 'state'. If the target object does not
    * contain the field with the expected value then waiting will continue until it does, or the
@@ -47,17 +47,18 @@ public class FirestoreEndpoint implements CTPEndpoint {
    * Firestore. This string must end with either a 'ms' suffix for milliseconds or 's' for 
    * seconds, eg '750ms', '10s or '2.5s'.
    * 
-   * @return The number of milliseconds which this endpoint was active for.
+   * @return The number of update timestamp of a found object.
    * @throws Exception if something went wrong, eg, Firestore exception or if the 'contentCheckPath'
    * field could not be found in the target object.
    */
   @RequestMapping(value = "/firestore/wait", method = RequestMethod.GET)
   @ResponseStatus(value = HttpStatus.OK)
   public ResponseEntity<String> firestoreWait(String collection, String key, 
-      Long minObjectTimestamp, String contentCheckPath, String expectedValue, String timeout)
+      Long newerThan, String contentCheckPath, String expectedValue, String timeout)
       throws Exception {
     long startTime = System.currentTimeMillis();
     long timeoutMillis = parseTimeoutString(timeout);
+    long timeoutLimit = startTime + timeoutMillis;
     
     log.info("Firestore wait for collection '" + collection + "' to contain '" + key + "' "
         + "for up to '" + timeout + "'");
@@ -71,27 +72,25 @@ public class FirestoreEndpoint implements CTPEndpoint {
     
     // Wait until the object appears in Firestore, or we timeout waiting
     boolean found = false;
-    int numAttempts = 0;
+    long objectUpdateTimestamp;
     do { 
-      numAttempts++;
-      boolean objectExists = firestoreService.objectExists(collection, key, minObjectTimestamp,
+      objectUpdateTimestamp = firestoreService.objectExists(collection, key, newerThan,
           contentCheckPath, expectedValue);
-      if (objectExists) {
-        log.debug("Found object after " + numAttempts + " attempt(s)");
+      if (objectUpdateTimestamp > 0) {
+        log.debug("Found object");
         found = true;
         break;
       }
       
       Thread.sleep(10);
-    } while (startTime + timeoutMillis > System.currentTimeMillis());
+    } while (System.currentTimeMillis() < timeoutLimit);
    
     if (!found) {
-      log.debug("Failed to find object after " + numAttempts + " attempt(s)");
+      log.debug("Failed to find object");
       return ResponseEntity.notFound().build();
     }
     
-    long executionTime = System.currentTimeMillis() - startTime;
-    return ResponseEntity.ok(Long.toString(executionTime));
+    return ResponseEntity.ok(Long.toString(objectUpdateTimestamp));
   }
 
 

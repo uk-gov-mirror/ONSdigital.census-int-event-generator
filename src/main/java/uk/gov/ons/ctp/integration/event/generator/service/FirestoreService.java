@@ -24,7 +24,7 @@ public class FirestoreService {
   }
 
   
-  public boolean objectExists(String collectionName, String key, Long minObjectTimestamp,
+  public long objectExists(String collectionName, String key, Long newerThan,
       String contentCheckPath, String expectedValue) throws Exception {
     // Run a query
     String schema = gcpProject + "-" + collectionName;
@@ -45,15 +45,17 @@ public class FirestoreService {
  
     // Bail out if nothing found
     if (querySnapshot.isEmpty()) { 
-      return false;
+      return -1;
     }
 
-    // Optionally, only regard the object as existing if it is newer than the specified time
+    // Get hold of candidate object
     QueryDocumentSnapshot targetDocument = querySnapshot.getDocuments().get(0);
-    if (minObjectTimestamp != null) {
-      long objectUpdateMillis = targetDocument.getUpdateTime().getSeconds() * 1000;
-      if (objectUpdateMillis < minObjectTimestamp) {
-        return false;
+    long objectUpdateMillis = targetDocument.getUpdateTime().toDate().getTime();
+
+    // Optionally, only regard the object as existing if it is newer than the specified time
+    if (newerThan != null) {
+      if (!(objectUpdateMillis > newerThan)) {
+        return -1;
       }
     }
 
@@ -64,10 +66,10 @@ public class FirestoreService {
       Object actualValue = targetDocument.get(fieldPath);
 
       if (!expectedValue.equals(actualValue)) {
-        return false;
+        return -1;
       }
     }
     
-    return true;
+    return objectUpdateMillis;
   }
 }
