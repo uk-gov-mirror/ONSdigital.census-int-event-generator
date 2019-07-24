@@ -14,18 +14,21 @@ public class FirestoreService {
 
   private Firestore firestore;
   private String gcpProject;
-  
-  
+
   public FirestoreService() {
     firestore = FirestoreOptions.getDefaultInstance().getService();
-    
+
     gcpProject = firestore.getOptions().getProjectId();
     log.info("Connected to Firestore project: " + gcpProject);
   }
 
-  
-  public long objectExists(String collectionName, String key, Long newerThan,
-      String contentCheckPath, String expectedValue) throws Exception {
+  public long objectExists(
+      String collectionName,
+      String key,
+      Long newerThan,
+      String contentCheckPath,
+      String expectedValue)
+      throws Exception {
     // Run a query
     String schema = gcpProject + "-" + collectionName;
     FieldPath fieldPathForId = FieldPath.documentId();
@@ -42,9 +45,9 @@ public class FirestoreService {
       log.error(e, failureMessage);
       throw new Exception(failureMessage, e);
     }
- 
+
     // Bail out if nothing found
-    if (querySnapshot.isEmpty()) { 
+    if (querySnapshot.isEmpty()) {
       return -1;
     }
 
@@ -69,7 +72,7 @@ public class FirestoreService {
         return -1;
       }
     }
-    
+
     return objectUpdateMillis;
   }
 }

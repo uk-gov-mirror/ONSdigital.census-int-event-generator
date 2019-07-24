@@ -1,5 +1,11 @@
 package uk.gov.ons.ctp.integration.event.generator;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -10,12 +16,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 import org.springframework.core.io.ClassPathResource;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import uk.gov.ons.ctp.common.event.EventPublisher;
 import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
@@ -140,8 +140,8 @@ public class EventGenerator {
       String remainder = String.join(".", Arrays.copyOfRange(parts, 1, parts.length));
       JsonNode targetNode = node.get(parts[0]);
       if (targetNode == null) {
-        throw new Exception("Error: Child node '" + parts[0] + "' does not exist for "
-            + "key '" + key + "'");
+        throw new Exception(
+            "Error: Child node '" + parts[0] + "' does not exist for " + "key '" + key + "'");
       }
       setJsonNodeValue(targetNode, remainder, value);
     } else {
