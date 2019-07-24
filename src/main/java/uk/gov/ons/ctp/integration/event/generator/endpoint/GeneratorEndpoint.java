@@ -57,6 +57,8 @@ public class GeneratorEndpoint implements CTPEndpoint {
 
     GeneratorResponse response = new GeneratorResponse();
     response.setPayloads(payloads);
+
+    log.info("Event generation completed successfully");
     return ResponseEntity.ok(response);
   }
 }
