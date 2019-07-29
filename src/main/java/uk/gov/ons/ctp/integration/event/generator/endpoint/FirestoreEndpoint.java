@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
-import uk.gov.ons.ctp.integration.event.generator.service.FirestoreService;
+import uk.gov.ons.ctp.common.error.CTPException;
+import uk.gov.ons.ctp.common.error.CTPException.Fault;
+import uk.gov.ons.ctp.common.firestore.FirestoreWait;
 
 /** This endpoint gives Cucumber tests support level access to the projects Firestore content. */
 @RestController
@@ -17,14 +19,12 @@ import uk.gov.ons.ctp.integration.event.generator.service.FirestoreService;
 public class FirestoreEndpoint implements CTPEndpoint {
   private static final Logger log = LoggerFactory.getLogger(FirestoreEndpoint.class);
 
-  private FirestoreService firestoreService = new FirestoreService();
-
   /**
    * This endpoint allows the caller to wait for an object to appear in Firestore. If the object is
    * not found within the timeout period then we respond with a 404 (Object not found).
    *
    * <p>The caller can optionally wait for an object to be updated by specifying the updated
-   * timestamp or by the contact of a named field. If both criteria are specified then both
+   * timestamp or by the content of a named field. If both criteria are specified then both
    * conditions must be satisfied before we regard the object has having arrived in Firestore.
    *
    * @param collection is the name of the collection to search, eg, 'case'
@@ -35,17 +35,15 @@ public class FirestoreEndpoint implements CTPEndpoint {
    *     object is greater than this value, or the timeout period is reached. This value is the
    *     number of milliseconds since the epoch.
    * @param contentCheckPath, is an optional path to a field whose content we check to decide if an
-   *     object has been updated, eg 'contact.forename' or 'state'. If the target object does not
+   *     object has been updated, eg, 'contact.forename' or 'state'. If the target object does not
    *     contain the field with the expected value then waiting will continue until it does, or the
    *     timeout is reached.
-   * @param expectedValue, is the value than a field must contain if 'contentCheckPath' has been
-   *     set.
+   * @param expectedValue, is the value that a field must contain if 'contentCheckPath' has been
+   *     specified.
    * @param timeout specifies how long the caller is prepared to wait for an object to appear in
    *     Firestore. This string must end with either a 'ms' suffix for milliseconds or 's' for
-   *     seconds, eg '750ms', '10s or '2.5s'.
-   * @return The number of update timestamp of a found object.
-   * @throws Exception if something went wrong, eg, Firestore exception or if the 'contentCheckPath'
-   *     field could not be found in the target object.
+   *     seconds, eg, '750ms', '10s or '2.5s'.
+   * @return The update timestamp of a found object, or null if not found within the timeout.
    */
   @RequestMapping(value = "/firestore/wait", method = RequestMethod.GET)
   @ResponseStatus(value = HttpStatus.OK)
@@ -57,12 +55,9 @@ public class FirestoreEndpoint implements CTPEndpoint {
       String expectedValue,
       String timeout)
       throws Exception {
-    long startTime = System.currentTimeMillis();
-    long timeoutMillis = parseTimeoutString(timeout);
-    long timeoutLimit = startTime + timeoutMillis;
 
     log.info(
-        "Firestore wait for collection '"
+        "Firestore wait. Looking for for collection '"
             + collection
             + "' to contain '"
             + key
@@ -71,31 +66,33 @@ public class FirestoreEndpoint implements CTPEndpoint {
             + timeout
             + "'");
 
-    // Validate matching path+value arguments
-    if (contentCheckPath != null ^ expectedValue != null) {
-      String errorMessage =
-          "Mismatched 'path' and 'value' arguments."
-              + " Either both must be supplied or neither supplied";
-      return ResponseEntity.badRequest().body(errorMessage);
+    if (collection == null || key == null || timeout == null) {
+      return ResponseEntity.badRequest().body("collection, key and timeout must all be specified");
     }
 
-    // Wait until the object appears in Firestore, or we timeout waiting
-    boolean found = false;
-    long objectUpdateTimestamp;
-    do {
-      objectUpdateTimestamp =
-          firestoreService.objectExists(
-              collection, key, newerThan, contentCheckPath, expectedValue);
-      if (objectUpdateTimestamp > 0) {
-        log.debug("Found object");
-        found = true;
-        break;
+    Long objectUpdateTimestamp;
+    try {
+      long timeoutMillis = parseTimeoutString(timeout);
+
+      FirestoreWait firestore =
+          FirestoreWait.builder()
+              .collection(collection)
+              .key(key)
+              .newerThan(newerThan)
+              .contentCheckPath(contentCheckPath)
+              .expectedValue(expectedValue)
+              .timeout(timeoutMillis)
+              .build();
+      objectUpdateTimestamp = firestore.waitForObject();
+    } catch (CTPException e) {
+      if (e.getFault() == Fault.VALIDATION_FAILED) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+      } else {
+        return ResponseEntity.badRequest().body(e.getMessage());
       }
+    }
 
-      Thread.sleep(10);
-    } while (System.currentTimeMillis() < timeoutLimit);
-
-    if (!found) {
+    if (objectUpdateTimestamp == null) {
       log.debug("Failed to find object");
       return ResponseEntity.notFound().build();
     }
@@ -103,14 +100,19 @@ public class FirestoreEndpoint implements CTPEndpoint {
     return ResponseEntity.ok(Long.toString(objectUpdateTimestamp));
   }
 
-  private long parseTimeoutString(String timeout) throws Exception {
+  private long parseTimeoutString(String timeout) throws CTPException {
     int multiplier;
     if (timeout.endsWith("ms")) {
       multiplier = 1;
     } else if (timeout.endsWith("s")) {
       multiplier = 1000;
     } else {
-      throw new Exception("timeout must end with either 'ms' for milliseconds or 's' for seconds");
+      String errorMessage =
+          "timeout specification ('"
+              + timeout
+              + "') must end with either 'ms' for milliseconds or 's' for seconds";
+      log.error(errorMessage);
+      throw new CTPException(Fault.VALIDATION_FAILED, errorMessage);
     }
 
     String timeoutValue = timeout.replaceAll("(ms|s)", "");
