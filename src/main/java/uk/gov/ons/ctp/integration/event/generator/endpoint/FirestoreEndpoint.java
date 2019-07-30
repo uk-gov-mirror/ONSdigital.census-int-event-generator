@@ -6,12 +6,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
 import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.error.CTPException.Fault;
 import uk.gov.ons.ctp.common.firestore.FirestoreWait;
+import uk.gov.ons.ctp.integration.event.generator.util.TimeoutParser;
 
 /** This endpoint gives Cucumber tests support level access to the projects Firestore content. */
 @RestController
@@ -48,12 +50,12 @@ public class FirestoreEndpoint implements CTPEndpoint {
   @RequestMapping(value = "/firestore/wait", method = RequestMethod.GET)
   @ResponseStatus(value = HttpStatus.OK)
   public ResponseEntity<String> firestoreWait(
-      String collection,
-      String key,
+      @RequestParam String collection,
+      @RequestParam String key,
       Long newerThan,
       String contentCheckPath,
       String expectedValue,
-      String timeout)
+      @RequestParam String timeout)
       throws Exception {
 
     log.info(
@@ -72,7 +74,7 @@ public class FirestoreEndpoint implements CTPEndpoint {
 
     Long objectUpdateTimestamp;
     try {
-      long timeoutMillis = parseTimeoutString(timeout);
+      long timeoutMillis = TimeoutParser.parseTimeoutString(timeout);
 
       FirestoreWait firestore =
           FirestoreWait.builder()
@@ -98,26 +100,5 @@ public class FirestoreEndpoint implements CTPEndpoint {
     }
 
     return ResponseEntity.ok(Long.toString(objectUpdateTimestamp));
-  }
-
-  private long parseTimeoutString(String timeout) throws CTPException {
-    int multiplier;
-    if (timeout.endsWith("ms")) {
-      multiplier = 1;
-    } else if (timeout.endsWith("s")) {
-      multiplier = 1000;
-    } else {
-      String errorMessage =
-          "timeout specification ('"
-              + timeout
-              + "') must end with either 'ms' for milliseconds or 's' for seconds";
-      log.error(errorMessage);
-      throw new CTPException(Fault.VALIDATION_FAILED, errorMessage);
-    }
-
-    String timeoutValue = timeout.replaceAll("(ms|s)", "");
-
-    double timeoutAsDouble = Double.parseDouble(timeoutValue) * multiplier;
-    return (long) timeoutAsDouble;
   }
 }

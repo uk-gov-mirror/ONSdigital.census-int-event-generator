@@ -205,7 +205,48 @@ The typical sequence would be:
   - Use event generator to send in updated object.
   - Wait for update to appear in Firestore. The 'newerThan' timestamp value is specified as the captured timestamp of the initial create. 
 
-## Programmatic use
+
+### GET /rabbit/create/{eventType}
+
+This endpoint creates a rabbit queue and binding for the supplied event type. The created queue name is 
+the same as the routing key. This endpoint returns a String containing the name of the queue.
+
+Rabbit doesn't mind if the queue/binding already exist.
+
+```
+http --auth generator:hitmeup GET http://localhost:8171/rabbit/create/SURVEY_LAUNCHED
+```
+
+### GET /rabbit/flush/{queueName}
+
+This endpoint purges the contents of the named queue. This allows tests to ensure that outbound queues are in an empty 
+state before running a test.
+
+It returns the number of messages which were deleted.
+ 
+```
+http --auth generator:hitmeup GET "http://localhost:8171/rabbit/flush/Case.SurveyLaunched"
+```
+
+
+### GET /rabbit/get/{queueName}?timeout={timeoutString}
+
+This endpoint gets the next message from the named queue. If the queue is empty and no message arrives before the expiry of the timeout then it returns with a 404 (Not Found) status.
+
+If a message is found in time then the content of its body is returned.
+
+```
+http --auth generator:hitmeup GET "http://localhost:8171/rabbit/get/event.response.authentication?timeout=500ms"
+```
+
+
+###  GET /rabbit/close
+
+This endpoint cleanly closes the Rabbit connection.
+
+```
+http --auth generator:hitmeup GET "http://localhost:8171/rabbit/close"
+```
 
     
 ## Copyright
