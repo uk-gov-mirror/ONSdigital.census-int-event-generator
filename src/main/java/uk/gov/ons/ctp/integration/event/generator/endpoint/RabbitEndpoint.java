@@ -1,5 +1,7 @@
 package uk.gov.ons.ctp.integration.event.generator.endpoint;
 
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,8 +11,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
 import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
@@ -58,7 +58,7 @@ public class RabbitEndpoint implements CTPEndpoint {
 
     return ResponseEntity.ok(count);
   }
-  
+
   @RequestMapping(value = "/rabbit/get/send", method = RequestMethod.GET)
   @ResponseStatus(value = HttpStatus.OK)
   public ResponseEntity<String> sendEvent() throws Exception {
@@ -74,11 +74,12 @@ public class RabbitEndpoint implements CTPEndpoint {
             .agentId("x123")
             .build();
 
-    String transactionId = rabbit.sendEvent(EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveryLaunched);
-    
+    String transactionId =
+        rabbit.sendEvent(
+            EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveryLaunched);
+
     return ResponseEntity.ok(transactionId);
   }
-  
 
   @RequestMapping(value = "/rabbit/get/{queueName}", method = RequestMethod.GET)
   @ResponseStatus(value = HttpStatus.OK)
