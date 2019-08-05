@@ -11,7 +11,7 @@ public class TimeoutParser {
 
   /**
    * Converts a string time specification into a milliseconds value. This method assumes a time in
-   * the format of "<digits>ms|s", eg 500ms, 2s, 2.5s.
+   * the format of "[digits]ms|s", eg 500ms, 2s, 2.5s.
    *
    * @param timeout is a String specifying the time value.
    * @return long containing the number of milliseconds this time period represents.

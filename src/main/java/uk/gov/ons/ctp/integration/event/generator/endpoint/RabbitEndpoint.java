@@ -1,7 +1,6 @@
 package uk.gov.ons.ctp.integration.event.generator.endpoint;
 
-import com.godaddy.logging.Logger;
-import com.godaddy.logging.LoggerFactory;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,9 +9,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import com.godaddy.logging.Logger;
+import com.godaddy.logging.LoggerFactory;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
+import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
-import uk.gov.ons.ctp.common.rabbit.RabbitInteraction;
+import uk.gov.ons.ctp.common.event.EventPublisher.Source;
+import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
+import uk.gov.ons.ctp.common.rabbit.RabbitHelper;
 import uk.gov.ons.ctp.integration.event.generator.util.TimeoutParser;
 
 /**
@@ -35,7 +39,7 @@ public class RabbitEndpoint implements CTPEndpoint {
 
     EventType eventType = EventType.valueOf(eventTypeAsString);
 
-    RabbitInteraction rabbit = RabbitInteraction.instance(RABBIT_EXCHANGE);
+    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
     String queueName = rabbit.createQueue(eventType);
 
     return ResponseEntity.ok(queueName);
@@ -48,12 +52,33 @@ public class RabbitEndpoint implements CTPEndpoint {
 
     log.info("Flushing queue: '" + queueName + "'");
 
-    RabbitInteraction rabbit = RabbitInteraction.instance(RABBIT_EXCHANGE);
+    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
 
     int count = rabbit.flushQueue(queueName);
 
     return ResponseEntity.ok(count);
   }
+  
+  @RequestMapping(value = "/rabbit/get/send", method = RequestMethod.GET)
+  @ResponseStatus(value = HttpStatus.OK)
+  public ResponseEntity<String> sendEvent() throws Exception {
+
+    log.info("Sending event: '");
+
+    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
+
+    SurveyLaunchedResponse surveryLaunched =
+        SurveyLaunchedResponse.builder()
+            .questionnaireId("q123")
+            .caseId(UUID.randomUUID())
+            .agentId("x123")
+            .build();
+
+    String transactionId = rabbit.sendEvent(EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveryLaunched);
+    
+    return ResponseEntity.ok(transactionId);
+  }
+  
 
   @RequestMapping(value = "/rabbit/get/{queueName}", method = RequestMethod.GET)
   @ResponseStatus(value = HttpStatus.OK)
@@ -63,7 +88,7 @@ public class RabbitEndpoint implements CTPEndpoint {
 
     log.info("Getting from queue: '" + queueName + "' with timeout of '" + timeout + "'");
 
-    RabbitInteraction rabbit = RabbitInteraction.instance(RABBIT_EXCHANGE);
+    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
     String messageBody = rabbit.getMessage(queueName, TimeoutParser.parseTimeoutString(timeout));
 
     if (messageBody == null) {
@@ -79,7 +104,7 @@ public class RabbitEndpoint implements CTPEndpoint {
 
     log.info("Closing Rabbit connection");
 
-    RabbitInteraction rabbit = RabbitInteraction.instance(RABBIT_EXCHANGE);
+    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
     rabbit.close();
 
     return ResponseEntity.ok("Connection closed");
