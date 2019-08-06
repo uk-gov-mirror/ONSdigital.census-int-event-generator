@@ -1,5 +1,6 @@
 package uk.gov.ons.ctp.integration.event.generator.endpoint;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
 import java.util.UUID;
@@ -30,6 +31,8 @@ public class RabbitEndpoint implements CTPEndpoint {
 
   private static final String RABBIT_EXCHANGE = "events";
 
+  private ObjectMapper mapper = new ObjectMapper();
+
   @RequestMapping(value = "/rabbit/create/{eventType}", method = RequestMethod.GET)
   @ResponseStatus(value = HttpStatus.OK)
   public ResponseEntity<String> createQueue(
@@ -59,7 +62,14 @@ public class RabbitEndpoint implements CTPEndpoint {
     return ResponseEntity.ok(count);
   }
 
-  @RequestMapping(value = "/rabbit/get/send", method = RequestMethod.GET)
+  /**
+   * Note that this endpoint is only provided for manual testing of the RabbitHelper.sendEvent(). It
+   * is not intended to be used.
+   *
+   * <p>It basically duplicates the whole point of the EventGenerator, and only works with limited
+   * fixed data.
+   */
+  @RequestMapping(value = "/rabbit/send", method = RequestMethod.GET)
   @ResponseStatus(value = HttpStatus.OK)
   public ResponseEntity<String> sendEvent() throws Exception {
 
@@ -91,6 +101,44 @@ public class RabbitEndpoint implements CTPEndpoint {
 
     RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
     String messageBody = rabbit.getMessage(queueName, TimeoutParser.parseTimeoutString(timeout));
+
+    if (messageBody == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    return ResponseEntity.ok(messageBody);
+  }
+
+  @RequestMapping(value = "/rabbit/get/object/{queueName}", method = RequestMethod.GET)
+  @ResponseStatus(value = HttpStatus.OK)
+  public ResponseEntity<String> get(
+      @PathVariable(value = "queueName") final String queueName,
+      @RequestParam String clazzName,
+      @RequestParam String timeout)
+      throws Exception {
+
+    log.info(
+        "Getting from queue: '"
+            + queueName
+            + "' and converting to an object of type '"
+            + clazzName
+            + "', with timeout of '"
+            + timeout
+            + "'");
+
+    // Read message as object
+    Class<?> clazz = Class.forName(clazzName);
+    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
+    Object resultAsObject =
+        rabbit.getMessage(queueName, clazz, TimeoutParser.parseTimeoutString(timeout));
+
+    // Bail out if no object read from queue.
+    if (resultAsObject == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    // Convert object to string
+    String messageBody = mapper.writeValueAsString(resultAsObject);
 
     if (messageBody == null) {
       return ResponseEntity.notFound().build();
