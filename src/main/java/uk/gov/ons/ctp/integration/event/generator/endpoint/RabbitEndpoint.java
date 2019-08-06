@@ -3,7 +3,6 @@ package uk.gov.ons.ctp.integration.event.generator.endpoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godaddy.logging.Logger;
 import com.godaddy.logging.LoggerFactory;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,10 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
-import uk.gov.ons.ctp.common.event.EventPublisher.Channel;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
-import uk.gov.ons.ctp.common.event.EventPublisher.Source;
-import uk.gov.ons.ctp.common.event.model.SurveyLaunchedResponse;
 import uk.gov.ons.ctp.common.rabbit.RabbitHelper;
 import uk.gov.ons.ctp.integration.event.generator.util.TimeoutParser;
 
@@ -60,35 +56,6 @@ public class RabbitEndpoint implements CTPEndpoint {
     int count = rabbit.flushQueue(queueName);
 
     return ResponseEntity.ok(count);
-  }
-
-  /**
-   * Note that this endpoint is only provided for manual testing of the RabbitHelper.sendEvent(). It
-   * is not intended to be used.
-   *
-   * <p>It basically duplicates the whole point of the EventGenerator, and only works with limited
-   * fixed data.
-   */
-  @RequestMapping(value = "/rabbit/send", method = RequestMethod.GET)
-  @ResponseStatus(value = HttpStatus.OK)
-  public ResponseEntity<String> sendEvent() throws Exception {
-
-    log.info("Sending event: '");
-
-    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
-
-    SurveyLaunchedResponse surveryLaunched =
-        SurveyLaunchedResponse.builder()
-            .questionnaireId("q123")
-            .caseId(UUID.randomUUID())
-            .agentId("x123")
-            .build();
-
-    String transactionId =
-        rabbit.sendEvent(
-            EventType.SURVEY_LAUNCHED, Source.RESPONDENT_HOME, Channel.RH, surveryLaunched);
-
-    return ResponseEntity.ok(transactionId);
   }
 
   @RequestMapping(value = "/rabbit/get/{queueName}", method = RequestMethod.GET)
