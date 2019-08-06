@@ -239,6 +239,23 @@ If a message is found in time then the content of its body is returned.
 http --auth generator:hitmeup GET "http://localhost:8171/rabbit/get/event.response.authentication?timeout=500ms"
 ```
 
+### GET /rabbit/get/{queueName}?clazzName={className}&timeout={timeoutString}
+
+This endpoint is a variant of the previous get. It behaves the same as previous get endpoint except that it uses Jackson
+to convert the messsage payload to a Java object. In order to return a Json string it then converts the object back into 
+Json. This endpoint is really only useful for manual testing/debugging of the underlying method in RabbitHelper.java. 
+
+```
+ http --auth generator:hitmeup GET "http://localhost:8171/rabbit/get/object/event.response.authentication?clazzName=uk.gov.ons.ctp.common.event.model.RespondentAuthenticatedEvent&timeout=500ms"
+ ```
+
+### GET /rabbit/send
+
+This endpoint uses the RabbitHelper to send a hardcoded message. Sending messages is the primary use of the EventGenerator so this inflexible endpoint is only useful for manual testing/debugging of RabbitHelper.  
+
+```
+http --auth generator:hitmeup GET "http://localhost:8171/rabbit/send"
+```
 
 ###  GET /rabbit/close
 
