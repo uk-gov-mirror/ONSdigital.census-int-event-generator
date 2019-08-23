@@ -8,10 +8,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ImportResource;
+import org.springframework.context.annotation.Primary;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import uk.gov.ons.ctp.common.event.EventPublisher;
 import uk.gov.ons.ctp.common.event.EventSender;
 import uk.gov.ons.ctp.common.event.SpringRabbitEventSender;
+import uk.gov.ons.ctp.common.jackson.CustomObjectMapper;
 
 @SpringBootApplication
 @IntegrationComponentScan("uk.gov.ons.ctp.integration")
@@ -42,5 +44,16 @@ public class EventGeneratorApplication {
 
     EventSender sender = new SpringRabbitEventSender(template);
     return new EventPublisher(sender);
+  }
+  
+  /**
+   * Custom Object Mapper
+   *
+   * @return a customer object mapper
+   */
+  @Bean
+  @Primary
+  public CustomObjectMapper customObjectMapper() {
+    return new CustomObjectMapper();
   }
 }
