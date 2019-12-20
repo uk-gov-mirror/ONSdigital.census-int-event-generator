@@ -14,7 +14,7 @@
 		"longitude": "0.0098",
 		"uprn": "123456789",
 		"arid": "x",
-		"addressType": "HI",
+		"addressType": "HH",
 		"estabType": "E1"
 	},
 	"contact": {
@@ -24,6 +24,7 @@
 		"email": "phil.whiles@gmail.com",
 		"telNo": "07968583119"
 	},
+	"caseType": "HH",
 	"state": "ACTIVE",
 	"actionableFrom": null
 }
