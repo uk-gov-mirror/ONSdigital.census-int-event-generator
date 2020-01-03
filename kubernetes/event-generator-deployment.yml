@@ -5,7 +5,7 @@ metadata:
   labels:
     app: eventgenerator
 spec:
-  replicas: 1
+  replicas: [REPLICAS]
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -19,15 +19,15 @@ spec:
     spec:
       containers:
       - name: eventgenerator
-        image: eu.gcr.io/census-int-ci/census-event-generator:latest
+        image: eu.gcr.io/[GCR]/census-event-generator:[CONTAINER_VERSION]
         imagePullPolicy: Always
         resources:
           requests:
-            cpu: "1000m"
-            memory: "2048Mi"
+            cpu: "[CPU_REQ]"
+            memory: "[MEM_REQ]"
           limits:
-            cpu: "1000m"
-            memory: "2048Mi"
+            cpu: "[CPU_MAX]"
+            memory: "[MEM_MAX]"
         readinessProbe:
           httpGet:
             path: /info
@@ -50,6 +50,7 @@ spec:
         env:
         - name: JAVA_TOOL_OPTIONS
           value: "-Dlogging.useJson=true
+            -Dspring.profiles.active=[ENV]
             -Dlogging.level.uk.gov.ons.ctp=DEBUG
             -Dlogging.level.org.springframework=WARN
             -Dendpoints.autoconfig.enabled=false-Dendpoints.beans.enabled=false
