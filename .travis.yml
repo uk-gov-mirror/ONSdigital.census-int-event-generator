@@ -17,7 +17,7 @@ script:
   - travis_wait mvn verify
 
 after_success:
-  - if [ "$BRANCH" != "master" ]; then
+  - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
       ./scripts/docker_push.sh;
     fi
 
