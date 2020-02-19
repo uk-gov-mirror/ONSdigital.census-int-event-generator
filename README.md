@@ -2,7 +2,7 @@
 This is a utility spring boot web app, whose purpose is to create and publish rabbit amqp census events, for the purposes of 
 performance testing.
 The web app needs to be deployed to a GCP project where it will have access to the Rabbit instance it will publish to.
-It's endpoint can then be called remotely, to instruct it to generate events.
+Its endpoint can then be called remotely, to instruct it to generate events.
 
 
 The app is deployed using a k8s manifest, through which the location of the rabbit it sends to can
@@ -140,7 +140,7 @@ To support waiting on objects whose content we expect to be updated the caller c
 
 The caller can optionally specify that age of the object:
   - **newerThan**, is a timestamp that the object must have been updated since. Waiting will continue until a candidate object has an update time greater than the this value, or the timeout period is reached. This value is a long containing the number of milliseconds since the epoch.
-Note that when Firestore updates an object it does not set the update timestamp of an object if it's contents have not changed.   
+Note that when Firestore updates an object it does not set the update timestamp of an object if its contents have not changed.   
     
 The caller can optionally wait for the object to contain some expected content:
   - **contentCheckPath**, is an optional path to a field whose content we check to decide if 
@@ -202,7 +202,7 @@ It's for this reason that the endpoint returns an objects update time, as it all
 The typical sequence would be:
 
   - Invoke event generator to feed in event.
-  - Wait for object to appear in Firestore. Store it's update timestamp.
+  - Wait for object to appear in Firestore. Store its update timestamp.
   - Use event generator to send in updated object.
   - Wait for update to appear in Firestore. The 'newerThan' timestamp value is specified as the captured timestamp of the initial create. 
 
