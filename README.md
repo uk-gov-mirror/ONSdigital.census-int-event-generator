@@ -71,7 +71,7 @@ user: generator, password: hitmeup
             "survey": "census",
             "collectionExerciseId": "A1",
             "address": {
-                "addressLine1": "2A Priors Way",
+                "addressLine1": "22 Briars Way",
                 "addressLine2": null,
                 "addressLine3": null,
                 "townName": null,
@@ -86,10 +86,10 @@ user: generator, password: hitmeup
             },
             "contact": {
                 "title": "Sir",
-                "forename": "Phil",
-                "surname": "Whiles",
-                "email": "phil.whiles@gmail.com",
-                "telNo": "07968583119"
+                "forename": "Bill",
+                "surname": "Smith",
+                "email": "bill.smith@gmail.com",
+                "telNo": "07968561987"
             },
             "state": "ACTIVE",
             "actionableFrom": null
@@ -100,7 +100,7 @@ user: generator, password: hitmeup
             "survey": "census",
             "collectionExerciseId": "A1",
             "address": {
-                "addressLine1": "2A Priors Way",
+                "addressLine1": "22 Briars Way",
                 "addressLine2": null,
                 "addressLine3": null,
                 "townName": null,
@@ -115,10 +115,10 @@ user: generator, password: hitmeup
             },
             "contact": {
                 "title": "Sir",
-                "forename": "Phil",
-                "surname": "Whiles",
-                "email": "phil.whiles@gmail.com",
-                "telNo": "07968583119"
+                "forename": "Bill",
+                "surname": "Smith",
+                "email": "bill.smith@gmail.com",
+                "telNo": "07968561987"
             },
             "state": "ACTIVE",
             "actionableFrom": null
@@ -187,7 +187,7 @@ http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collect
 http --auth generator:hitmeup get http://localhost:8171/firestore/wait collection==case key==f868fcfc-7280-40ea-ab01-b173ac245da3 timeout==500ms
 
 # And to wait for an object to be updated:
-http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collection=case&key=f868fcfc-7280-40ea-ab01-173ac245da3&newerThan=1563801758184&path=contact.forename&value=Phil&timeout=500s"
+http --auth generator:hitmeup  get "http://localhost:8171/firestore/wait?collection=case&key=f868fcfc-7280-40ea-ab01-173ac245da3&newerThan=1563801758184&path=contact.forename&value=Bill&timeout=500s"
 ```
 
 #### Object updates and timestamps
