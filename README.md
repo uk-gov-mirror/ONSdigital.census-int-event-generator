@@ -88,7 +88,6 @@ user: generator, password: hitmeup
                 "title": "Sir",
                 "forename": "Bill",
                 "surname": "Smith",
-                "email": "bill.smith@gmail.com",
                 "telNo": "07968561987"
             },
             "state": "ACTIVE",
@@ -117,7 +116,6 @@ user: generator, password: hitmeup
                 "title": "Sir",
                 "forename": "Bill",
                 "surname": "Smith",
-                "email": "bill.smith@gmail.com",
                 "telNo": "07968561987"
             },
             "state": "ACTIVE",
