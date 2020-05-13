@@ -115,8 +115,10 @@ public class EventGenerator {
     payloadType = payloadClass.getSimpleName();
     JsonNode node = loadObjectNode(payloadType);
     for (Map.Entry<String, String> entry : context.entrySet()) {
-      String value = null;
-      if (entry.getValue().startsWith("#")) {
+      String value;
+      if (entry.getValue() == null) {
+        value = null;
+      } else if (entry.getValue().startsWith("#")) {
         switch (entry.getValue().substring(1)) {
           case "uuid":
             value = UUID.randomUUID().toString();
