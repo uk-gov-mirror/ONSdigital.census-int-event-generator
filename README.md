@@ -13,6 +13,20 @@ payloads. This is used as the pro-forma for the specific payload type, and value
 to the contextual data sent to the endpoint.
 
 ## Endpoint
+
+### SETUP
+
+```
+export EVENT_GEN_USER="** TBD **"
+export EVENT_GEN_PASSWORD="** TBD **"
+
+# point at local event generator
+export EVENT_GEN_URL="http://localhost:8171"
+# or point at census-rh-dev
+export EVENT_GEN_URL="https://gen-dev.int.census-gcp.onsdigital.uk"
+```
+
+
 ### POST /generate
 
 This endpoint publishes events of the specified type.
@@ -20,23 +34,28 @@ This endpoint publishes events of the specified type.
 Example command line usage:
 
 ```
-    cat > /tmp/uac_updated.json <<EOF
+    cat > /tmp/uac_updated_01.json <<EOF
     {
         "eventType": "UAC_UPDATED",
         "source": "SAMPLE_LOADER",
         "channel": "RM",
         "contexts": [
             {
-                "uacHash": "147eb9dcde0e090429c01dbf634fd9b69a7f141f005c387a9c00498908499dde",
-                "caseId": "f868fcfc-7280-40ea-ab01-b173ac245da3"
+                "uacHash": "a373eb6a658ab7ec2bc5eb24ddff2e40082db02a49bf9d35e7695f0705ba3a41",
+                "active": true,
+                "questionnaireId": "111111111",
+                "caseType": "HH",
+                "region": "E",
+                "caseId": "014477d1-dd3f-4c69-b181-7ff725dc9f01",
+                "collectionExerciseId": "e01de4dc-3c3b-11e9-b210-d663bd873e01",
+                "formType": "H"
             }
         ]
     }
     EOF
 
-    http --auth generator:hitmeup POST "http://localhost:8171/generate" @/tmp/uac_updated.json
+    curl -s --data @/tmp/uac_updated_01.json -H "Content-Type: application/json" --user $EVENT_GEN_USER:$EVENT_GEN_PASSWORD $EVENT_GEN_URL/generate | jq
 ```
-
 
 Out of the box, basic auth :
 user: generator, password: hitmeup
@@ -44,86 +63,95 @@ user: generator, password: hitmeup
 
 #### Request Body
 ```
+cat > /tmp/case_01.json <<EOF
 {
-	"eventType": "CASE_CREATED",
-	"source": "RESPONDENT_HOME",
-	"channel": "RH",
-	"contexts": [
-		{
-			"caseRef": "hello",
-			"id": "#uuid"
-		},
-		{
+    "eventType": "CASE_CREATED",
+    "source": "RESPONDENT_HOME",
+    "channel": "RH",
+    "contexts": [
+        {
+            "id": "015c8f60-fa28-4316-b03c-733881747101",
+            "caseType": "HH",
+            "address.postcode": "EX1 1BB",
+            "address.addressType": "HH",
+            "address.uprn": "10023122451"
+        },
+        {
 			"caseRef": "bar",
 			"id": "#uuid"
-		}
-	]
+	   }
+    ]
 }
+EOF
+
+curl -s --data @/tmp/case_01.json -H "Content-Type: application/json" --user $EVENT_GEN_USER:$EVENT_GEN_PASSWORD $EVENT_GEN_URL/generate | jq
 ```
 
 ####Response
 ```
 {
-    "payloads": [
-        {
-            "id": "06d33e2e-9c68-4f46-88d8-ce46c3abccc2",
-            "caseRef": "hello",
-            "survey": "census",
-            "collectionExerciseId": "A1",
-            "address": {
-                "addressLine1": "22 Briars Way",
-                "addressLine2": null,
-                "addressLine3": null,
-                "townName": null,
-                "postcode": null,
-                "region": null,
-                "latitude": null,
-                "longitude": null,
-                "uprn": null,
-                "arid": null,
-                "addressType": null,
-                "estabType": null
-            },
-            "contact": {
-                "title": "Sir",
-                "forename": "Bill",
-                "surname": "Smith",
-                "email": "bill.smith@gmail.com",
-                "telNo": "07968561987"
-            },
-            "state": "ACTIVE",
-            "actionableFrom": null
-        },
-        {
-            "id": "0d1f7bc0-a964-48c5-be8a-5c0af359d0b9",
-            "caseRef": "bar",
-            "survey": "census",
-            "collectionExerciseId": "A1",
-            "address": {
-                "addressLine1": "22 Briars Way",
-                "addressLine2": null,
-                "addressLine3": null,
-                "townName": null,
-                "postcode": null,
-                "region": null,
-                "latitude": null,
-                "longitude": null,
-                "uprn": null,
-                "arid": null,
-                "addressType": null,
-                "estabType": null
-            },
-            "contact": {
-                "title": "Sir",
-                "forename": "Bill",
-                "surname": "Smith",
-                "email": "bill.smith@gmail.com",
-                "telNo": "07968561987"
-            },
-            "state": "ACTIVE",
-            "actionableFrom": null
-        }
-    ]
+  "payloads": [
+    {
+      "id": "015c8f60-fa28-4316-b03c-733881747101",
+      "caseRef": "123456",
+      "caseType": "HH",
+      "survey": "CENSUS",
+      "collectionExerciseId": "c6286a36-a04a-4536-9c3d-64db0e97e377",
+      "address": {
+        "addressLine1": "Nimrod House",
+        "addressLine2": "Harbour Street",
+        "addressLine3": "Smithfield",
+        "townName": "Exeter",
+        "postcode": "EX1 1BB",
+        "region": "E",
+        "latitude": "51.4934",
+        "longitude": "0.0098",
+        "uprn": "10023122451",
+        "arid": "x",
+        "addressType": "HH",
+        "addressLevel": null,
+        "estabType": "E1"
+      },
+      "contact": {
+        "title": "Sir",
+        "forename": "Phil",
+        "surname": "Whiles",
+        "telNo": "07968583119"
+      },
+      "actionableFrom": null,
+      "handDelivery": false
+    },
+    {
+      "id": "4a5fdb0e-72de-4fcc-a520-6ad50aef68a4",
+      "caseRef": "bar",
+      "caseType": "HH",
+      "survey": "CENSUS",
+      "collectionExerciseId": "c6286a36-a04a-4536-9c3d-64db0e97e377",
+      "address": {
+        "addressLine1": "Nimrod House",
+        "addressLine2": "Harbour Street",
+        "addressLine3": "Smithfield",
+        "townName": "Exeter",
+        "postcode": "EX1 2TDD",
+        "region": "E",
+        "latitude": "51.4934",
+        "longitude": "0.0098",
+        "uprn": "123456789",
+        "arid": "x",
+        "addressType": "HH",
+        "addressLevel": null,
+        "estabType": "E1"
+      },
+      "contact": {
+        "title": "Sir",
+        "forename": "Phil",
+        "surname": "Whiles",
+        "telNo": "07968583119"
+      },
+      "actionableFrom": null,
+      "handDelivery": false
+    }
+  ]
 }
 ```
 
