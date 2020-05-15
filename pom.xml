@@ -9,7 +9,7 @@
   <parent>
     <groupId>uk.gov.ons.ctp.integration</groupId>
     <artifactId>census-int-common-config</artifactId>
-    <version>0.0.13</version>
+    <version>0.0.15-SNAPSHOT</version>
   </parent>
 
   <name>Census Integration Event Generator</name>
@@ -82,7 +82,6 @@
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest</artifactId>
-      <version>2.1</version>
       <scope>test</scope>
     </dependency>
 
@@ -97,21 +96,20 @@
     <dependency>
       <groupId>uk.gov.ons.ctp.integration.common</groupId>
       <artifactId>event-publisher</artifactId>
-      <version>0.0.28</version>
+      <version>0.0.32-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>uk.gov.ons.ctp.integration.common</groupId>
       <artifactId>test-framework</artifactId>
-      <version>0.0.11</version>
+      <version>0.0.14-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>uk.gov.ons.ctp.integration.common</groupId>
       <artifactId>cucumber-common</artifactId>
-      <version>0.0.14</version>
+      <version>0.0.15-SNAPSHOT</version>
     </dependency>
-
 
     <!-- third party libraries -->
     <dependency>
