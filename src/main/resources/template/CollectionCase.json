@@ -13,7 +13,6 @@
 		"latitude": "51.4934",
 		"longitude": "0.0098",
 		"uprn": "123456789",
-		"arid": "x",
 		"addressType": "HH",
 		"estabType": "E1"
 	},
@@ -24,5 +23,7 @@
 		"telNo": "07968583119"
 	},
 	"caseType": "HH",
-	"actionableFrom": null
+	"actionableFrom": null,
+	"addressInvalid": false,
+	"createdDateTime": "2020-06-01T20:17:46.384Z"
 }
