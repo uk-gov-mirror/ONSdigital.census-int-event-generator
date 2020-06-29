@@ -44,7 +44,7 @@ public class EventGeneratorApplication {
     EventSender sender = new SpringRabbitEventSender(template);
 
     EventPersistence eventPersistence = new VoidEventPersistence();
-    
+
     return new EventPublisher(sender, eventPersistence);
   }
 }
