@@ -12,8 +12,6 @@ import org.springframework.integration.annotation.IntegrationComponentScan;
 import uk.gov.ons.ctp.common.event.EventPublisher;
 import uk.gov.ons.ctp.common.event.EventSender;
 import uk.gov.ons.ctp.common.event.SpringRabbitEventSender;
-import uk.gov.ons.ctp.common.event.persistence.EventPersistence;
-import uk.gov.ons.ctp.common.event.persistence.VoidEventPersistence;
 
 @SpringBootApplication
 @IntegrationComponentScan("uk.gov.ons.ctp.integration")
@@ -43,8 +41,6 @@ public class EventGeneratorApplication {
     template.setChannelTransacted(true);
     EventSender sender = new SpringRabbitEventSender(template);
 
-    EventPersistence eventPersistence = new VoidEventPersistence();
-
-    return new EventPublisher(sender, eventPersistence);
+    return EventPublisher.createWithoutEventPersistence(sender);
   }
 }

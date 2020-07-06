@@ -65,7 +65,7 @@ public class EventGenerator {
       Class<? extends EventPayload> payloadClass)
       throws Exception {
     EventPayload payload = generatePayload(context, payloadClass);
-    publisher.sendEventWithoutPersistance(eventType, source, channel, payload);
+    publisher.sendEvent(eventType, source, channel, payload);
     return payload;
   }
 
