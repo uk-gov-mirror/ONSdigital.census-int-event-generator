@@ -44,10 +44,7 @@ cat > /tmp/uac_updated_01.json <<EOF
             "uacHash": "a373eb6a658ab7ec2bc5eb24ddff2e40082db02a49bf9d35e7695f0705ba3a41",
             "active": true,
             "questionnaireId": "111111111",
-            "caseType": "HH",
-            "region": "E",
             "caseId": "014477d1-dd3f-4c69-b181-7ff725dc9f01",
-            "collectionExerciseId": "e01de4dc-3c3b-11e9-b210-d663bd873e01",
             "formType": "H"
         }
     ]

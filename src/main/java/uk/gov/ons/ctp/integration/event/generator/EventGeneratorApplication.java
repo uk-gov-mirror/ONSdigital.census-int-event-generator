@@ -39,8 +39,8 @@ public class EventGeneratorApplication {
     template.setMessageConverter(new Jackson2JsonMessageConverter());
     template.setExchange("events");
     template.setChannelTransacted(true);
-
     EventSender sender = new SpringRabbitEventSender(template);
-    return new EventPublisher(sender);
+
+    return EventPublisher.createWithoutEventPersistence(sender);
   }
 }

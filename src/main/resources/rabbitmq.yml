@@ -1,0 +1,5 @@
+cucumberrabbitmq:
+  username: guest
+  password: guest
+  host: localhost
+  port: 35672
