@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.ons.ctp.common.endpoint.CTPEndpoint;
+import uk.gov.ons.ctp.common.error.CTPException;
 import uk.gov.ons.ctp.common.event.EventPublisher.EventType;
 import uk.gov.ons.ctp.common.rabbit.RabbitHelper;
 import uk.gov.ons.ctp.integration.event.generator.util.TimeoutParser;
@@ -33,14 +34,9 @@ public class RabbitEndpoint implements CTPEndpoint {
   @ResponseStatus(value = HttpStatus.OK)
   public ResponseEntity<String> createQueue(
       @PathVariable(value = "eventType") final String eventTypeAsString) throws Exception {
-
     log.info("Creating queue for events of type: '" + eventTypeAsString + "'");
-
     EventType eventType = EventType.valueOf(eventTypeAsString);
-
-    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
-    String queueName = rabbit.createQueue(eventType);
-
+    String queueName = rabbit().createQueue(eventType);
     return ResponseEntity.ok(queueName);
   }
 
@@ -48,13 +44,8 @@ public class RabbitEndpoint implements CTPEndpoint {
   @ResponseStatus(value = HttpStatus.OK)
   public ResponseEntity<Integer> flushQueue(
       @PathVariable(value = "queueName") final String queueName) throws Exception {
-
     log.info("Flushing queue: '" + queueName + "'");
-
-    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
-
-    int count = rabbit.flushQueue(queueName);
-
+    int count = rabbit().flushQueue(queueName);
     return ResponseEntity.ok(count);
   }
 
@@ -66,8 +57,7 @@ public class RabbitEndpoint implements CTPEndpoint {
 
     log.info("Getting from queue: '" + queueName + "' with timeout of '" + timeout + "'");
 
-    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
-    String messageBody = rabbit.getMessage(queueName, TimeoutParser.parseTimeoutString(timeout));
+    String messageBody = rabbit().getMessage(queueName, TimeoutParser.parseTimeoutString(timeout));
 
     if (messageBody == null) {
       return ResponseEntity.notFound().build();
@@ -95,9 +85,8 @@ public class RabbitEndpoint implements CTPEndpoint {
 
     // Read message as object
     Class<?> clazz = Class.forName(clazzName);
-    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
     Object resultAsObject =
-        rabbit.getMessage(queueName, clazz, TimeoutParser.parseTimeoutString(timeout));
+        rabbit().getMessage(queueName, clazz, TimeoutParser.parseTimeoutString(timeout));
 
     // Bail out if no object read from queue.
     if (resultAsObject == null) {
@@ -117,12 +106,12 @@ public class RabbitEndpoint implements CTPEndpoint {
   @RequestMapping(value = "/rabbit/close", method = RequestMethod.GET)
   @ResponseStatus(value = HttpStatus.OK)
   public ResponseEntity<String> close(String queueName) throws Exception {
-
     log.info("Closing Rabbit connection");
-
-    RabbitHelper rabbit = RabbitHelper.instance(RABBIT_EXCHANGE);
-    rabbit.close();
-
+    rabbit().close();
     return ResponseEntity.ok("Connection closed");
+  }
+
+  private RabbitHelper rabbit() throws CTPException {
+    return RabbitHelper.instance(RABBIT_EXCHANGE, false);
   }
 }
