@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: event-generator-config
 data:
-  rabbitmq-host: "10.181.123.5"
+  rabbitmq-host: "10.180.51.24"
   rabbitmq-port: "5672"

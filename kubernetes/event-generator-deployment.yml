@@ -1,11 +1,12 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: eventgenerator
-  labels:
-    app: eventgenerator
 spec:
   replicas: [REPLICAS]
+  selector:
+    matchLabels:
+      app: eventgenerator
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -17,6 +18,7 @@ spec:
       labels:
         app: eventgenerator
     spec:
+      serviceAccountName: respondenthome-service
       containers:
       - name: eventgenerator
         image: eu.gcr.io/[GCR]/census-event-generator:[CONTAINER_VERSION]
