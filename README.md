@@ -5,6 +5,7 @@ The web app needs to be deployed to a GCP project where it will have access to t
 Its endpoint can then be called remotely, to instruct it to generate events.
 
 
+
 The app is deployed using a k8s manifest, through which the location of the rabbit it sends to can
 be configured.
 
